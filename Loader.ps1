@@ -60,8 +60,8 @@ Else {
     New-Item -Path $path\ParsecTemp -ItemType directory| Out-Null
     }
 
-Unblock-File -Path "c:\cloud_prep\Parsec-Cloud-Preparation-Tool-T4-test\*"
-copy-Item "c:\cloud_prep\Parsec-Cloud-Preparation-Tool-T4-test\*" -Destination $path\ParsecTemp\ -Force -Recurse | Out-Null
+Unblock-File -Path "c:\cloud_prep\t4-cloud-prep-main\*"
+copy-Item "c:\cloud_prep\t4-cloud-prep-main\*" -Destination $path\ParsecTemp\ -Force -Recurse | Out-Null
 #lil nap
 Start-Sleep -s 1
 #Unblocking all script files
