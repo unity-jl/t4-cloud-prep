@@ -502,7 +502,7 @@ function Install7Zip {
     Start-Process C:\ParsecTemp\Apps\7zip.exe -ArgumentList '/S /D="C:\Program Files\7-Zip"' -Wait
     }
 
-#install-graphics-driverw -
+#install-graphics-driver
 function install-graphics-driver {
     ProgressWriter -Status "Installing 7Zip and GPU Driver" -PercentComplete $PercentComplete
     Install7Zip
@@ -510,55 +510,15 @@ function install-graphics-driver {
     cmd.exe /c "C:\ParsecTemp\Grid_Driver\setup.exe /s"
     }
 
- 
-function InstallParsec {
-    $userData = Invoke-RestMethod -Headers @{"Metadata"="true"} -Method GET -Uri "http://169.254.169.254/metadata/instance/compute/userData?api-version=2021-01-01&format=text"
-    $decoded = [System.Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($userData)) | convertfrom-json
-    $arglist = "/silent /shared /vdd"
-    $userAssigned = $false
-    foreach($setting in $decoded.data){
-        if($setting.value){
-            if($setting.setting -eq "user_email"){
-                $userAssigned = $true
-            }
-            elseif($setting.setting -eq "team_group_id" -and $userAssigned -eq $true){
-                continue
-            }
-            $arglist += (" /{0}={1}" -f $setting.setting, $setting.value)
-        }
-    }     
-    Start-Process "C:\ParsecTemp\Apps\parsec-windows.exe" -ArgumentList $arglist -wait
+function register-parsec-provisioning-task{
+    Start-Process powershell -Verb RunAs -ArgumentList @'
+    $action = New-ScheduledTaskAction -Execute 'C:\WINDOWS\system32\WindowsPowerShell\v1.0\powershell.exe' -Argument '-file c:\parsectemp\PreInstall\TeamMachineSetup.ps1'
+    $trigger =  New-ScheduledTaskTrigger -AtStartup
+    $principal = New-ScheduledTaskPrincipal -UserID "SYSTEM" -LogonType ServiceAccount -RunLevel highest
+    $settings = New-ScheduledTaskSettingsSet -ExecutionTimeLimit (New-TimeSpan -Hours 1)
+    Register-ScheduledTask -TaskName provision_team_machine -Action $action -Trigger $trigger -Principal $principal -Settings $settings
+'@ 
 }
-
-#Apps that require human intervention
-function Install-Gaming-Apps {
-    ProgressWriter -Status "Installing Parsec" -PercentComplete $PercentComplete
-    InstallParsec
-    Start-Process -FilePath "C:\Program Files\Parsec\parsecd.exe"
-    Start-Sleep -s 1
-    }
-
-#Disable Devices
-function disable-devices {
-    ProgressWriter -Status "Disabling Microsoft Basic Display Adapter, Generic Non PNP Monitor and other devices" -PercentComplete $PercentComplete
-    Get-PnpDevice | where {$_.friendlyname -like "Generic Non-PNP Monitor" -and $_.status -eq "OK"} | Disable-PnpDevice -confirm:$false | Out-Null
-    Get-PnpDevice | where {$_.friendlyname -like "Microsoft Basic Display Adapter" -and $_.status -eq "OK"} | Disable-PnpDevice -confirm:$false | Out-Null
-    Get-PnpDevice | where {$_.friendlyname -like "Google Graphics Array (GGA)" -and $_.status -eq "OK"} | Disable-PnpDevice -confirm:$false | Out-Null
-    Get-PnpDevice | where {$_.friendlyname -like "Microsoft Hyper-V Video" -and $_.status -eq "OK"} | Disable-PnpDevice -confirm:$false | Out-Null
-    }
-
-#Cleanup
-function clean-up {
-    ProgressWriter -Status "Deleting temporary files from C:\ParsecTemp" -PercentComplete $PercentComplete
-    Remove-Item -Path C:\ParsecTemp\Drivers -force -Recurse
-    Remove-Item -Path $path\ParsecTemp -force -Recurse
-    }
-
-#cleanup recent files
-function clean-up-recent {
-    ProgressWriter -Status "Delete recently accessed files list from Windows Explorer" -PercentComplete $PercentComplete
-    remove-item "$env:AppData\Microsoft\Windows\Recent\*" -Recurse -Force | Out-Null
-    }
 
 $ScripttaskList = @(
 "setupEnvironment";
@@ -573,10 +533,7 @@ $ScripttaskList = @(
 "set-time";
 "set-wallpaper";
 "install-graphics-driver";
-"Install-Gaming-Apps";
-"disable-devices";
-"clean-up";
-"clean-up-recent"
+"register-parsec-provisioning-task"
 )
 
 try{
@@ -584,7 +541,7 @@ try{
         $PercentComplete =$($ScriptTaskList.IndexOf($func) / $ScripttaskList.Count * 100)
         & $func $PercentComplete
         }
-    restart-computer
+    Restart-Computer 
 }
 catch{
     logger -event $_
