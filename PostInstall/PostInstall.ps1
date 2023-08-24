@@ -570,14 +570,8 @@ $ScripttaskList = @(
 "disable-network-window";
 "disable-logout";
 "disable-lock";
-"show-hidden-items";
-"show-file-extensions";
-"enhance-pointer-precision";
-"enable-mousekeys";
 "set-time";
 "set-wallpaper";
-"Create-AutoShutdown-Shortcut";
-"Create-One-Hour-Warning-Shortcut";
 "install-graphics-driver";
 "Install-Gaming-Apps";
 "disable-devices";
