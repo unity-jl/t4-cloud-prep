@@ -512,7 +512,7 @@ function install-graphics-driver {
 
 function register-parsec-provisioning-task{
     Start-Process powershell -Verb RunAs -ArgumentList @'
-    $action = New-ScheduledTaskAction -Execute 'C:\WINDOWS\system32\WindowsPowerShell\v1.0\powershell.exe' -Argument '-file c:\parsectemp\PreInstall\TeamMachineSetup.ps1'
+    $action = New-ScheduledTaskAction -Execute 'C:\WINDOWS\system32\WindowsPowerShell\v1.0\powershell.exe' -Argument '-file C:\cloud_prep\t4-cloud-prep-main\PreInstall\TeamMachineSetup.ps1'
     $trigger =  New-ScheduledTaskTrigger -AtStartup
     $principal = New-ScheduledTaskPrincipal -UserID "SYSTEM" -LogonType ServiceAccount -RunLevel highest
     $settings = New-ScheduledTaskSettingsSet -ExecutionTimeLimit (New-TimeSpan -Hours 1)
