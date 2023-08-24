@@ -559,7 +559,7 @@ function clean-up-recent {
     ProgressWriter -Status "Delete recently accessed files list from Windows Explorer" -PercentComplete $PercentComplete
     remove-item "$env:AppData\Microsoft\Windows\Recent\*" -Recurse -Force | Out-Null
     }
-<#
+
 $ScripttaskList = @(
 "setupEnvironment";
 "addRegItems";
@@ -584,22 +584,13 @@ $ScripttaskList = @(
 "clean-up";
 "clean-up-recent"
 )
-#>
-$ScripttaskList = @(
-"setupEnvironment";
-"addRegItems";
-"create-directories";
-"download-resources";
-"install-graphics-driver";
-"Install-Gaming-Apps";
-"disable-devices";
-)
 
 try{
     foreach ($func in $ScripttaskList) {
         $PercentComplete =$($ScriptTaskList.IndexOf($func) / $ScripttaskList.Count * 100)
         & $func $PercentComplete
         }
+    restart-computer
 }
 catch{
     logger -event $_
