@@ -541,7 +541,7 @@ try{
         $PercentComplete =$($ScriptTaskList.IndexOf($func) / $ScripttaskList.Count * 100)
         & $func $PercentComplete
         }
-    Restart-Computer 
+    Restart-Computer -Force
 }
 catch{
     logger -event $_
