@@ -532,8 +532,8 @@ $ScripttaskList = @(
 "disable-lock";
 "set-time";
 "set-wallpaper";
-"install-graphics-driver";
-"register-parsec-provisioning-task"
+"register-parsec-provisioning-task";
+"install-graphics-driver"
 )
 
 try{
