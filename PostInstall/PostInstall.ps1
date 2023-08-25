@@ -278,6 +278,11 @@ function download-resources {
     ProgressWriter -Status "Downloading Google Chrome" -PercentComplete $PercentComplete
     (New-Object System.Net.WebClient).DownloadFile("https://dl.google.com/tag/s/dl/chrome/install/googlechromestandaloneenterprise64.msi", "C:\ParsecTemp\Apps\googlechromestandaloneenterprise64.msi")
     ProgressWriter -Status "Downloading GRID Driver" -PercentComplete $PercentComplete
+
+
+
+
+    #FIX THIS. PARSE PAGE LINKS INSTEAD.
     (New-Object System.Net.WebClient).DownloadFile("https://download.microsoft.com/download/2/5/a/25ad21ca-ed89-41b4-935f-73023ef6c5af/528.89_grid_win10_win11_server2019_server2022_dch_64bit_international_Azure_swl.exe", "C:\ParsecTemp\GRID_Driver.exe")
     }
 
