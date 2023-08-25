@@ -52,3 +52,4 @@ Install-Gaming-Apps
 disable-devices
 clean-up
 clean-up-recent
+restart-computer -force
