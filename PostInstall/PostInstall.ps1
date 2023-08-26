@@ -44,7 +44,7 @@ function enhance-pointer-precision {
 }
 
 #enable Mouse Keys
-function enable-mousekeys {
+function enable-mouse-keys {
     progresswriter -status "Enabling mouse keys to assist with mouse cursor" -percentcomplete $percentcomplete
     set-itemproperty -path 'HKCU:\control panel\accessibility\mousekeys' -name flags -value 63 | out-null
 }
