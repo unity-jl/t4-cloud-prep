@@ -1,5 +1,4 @@
-﻿cls
- Write-Host -foregroundcolor red "
+﻿Write-Host -foregroundcolor red "
                                ((//////                                
                              #######//////                             
                              ##########(/////.                         
@@ -54,18 +53,13 @@
 "                                         
 Write-Output "Setting up Environment"
 $path = "c:\"
-if((Test-Path -Path $path\ParsecTemp ) -eq $true){
-    } 
-Else {
+if(!(Test-Path -Path $path\ParsecTemp)){
     New-Item -Path $path\ParsecTemp -ItemType directory| Out-Null
-    }
+}
 
 Unblock-File -Path "c:\cloud_prep\t4-cloud-prep-main\*"
-copy-Item "c:\cloud_prep\t4-cloud-prep-main\*" -Destination $path\ParsecTemp\ -Force -Recurse | Out-Null
-#lil nap
-Start-Sleep -s 1
 #Unblocking all script files
 Write-Output "Unblocking files just in case"
 Get-ChildItem -Path $path\ParsecTemp -Recurse | Unblock-File
 Write-Output "Starting main script"
-start-process powershell.exe -verb RunAS -argument "-file $path\parsectemp\PostInstall\PostInstall.ps1"
+start-process powershell.exe -verb RunAS -argument "-file $path\cloud_prep\t4-cloud-prep-main\PostInstall.ps1"
