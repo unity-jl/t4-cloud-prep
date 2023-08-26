@@ -13,7 +13,7 @@ function logger($event){
 }
 
 #Creating Folders and moving script files into System directories
-function setupEnvironment{
+function setup-environment{
     progressWriter -status "Moving files and folders into place" -percentcomplete $percentcomplete
     #New-Item -Path $env:ProgramData\ParsecLoader -ItemType directory | Out-Null
     #Move-Item -Path $path\ParsecTemp\PreInstall\TeamMachineSetup.ps1 -Destination $env:ProgramData\ParsecLoader}
@@ -199,8 +199,7 @@ function clean-up {
  }
 
 $scripttasklist = @(
-"setupenvironment";
-"create-directories";
+"setup-environment";
 "download-resources";
 "set-time";
 "enhance-pointer-precision";
