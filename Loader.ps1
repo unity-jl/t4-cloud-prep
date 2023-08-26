@@ -62,4 +62,4 @@ Unblock-File -Path "c:\cloud_prep\t4-cloud-prep-main\*"
 Write-Output "Unblocking files just in case"
 Get-ChildItem -Path $path\ParsecTemp -Recurse | Unblock-File
 Write-Output "Starting main script"
-start-process powershell.exe -verb RunAS -argument "-file $path\cloud_prep\t4-cloud-prep-main\PostInstall.ps1"
+start-process powershell.exe -verb RunAS -argument ("-file " + $path + "cloud_prep\t4-cloud-prep-main\PostInstall\PostInstall.ps1") 
