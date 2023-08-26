@@ -59,7 +59,7 @@ function remove-shutdown {
 function install7zip {
     $url = invoke-webrequest -uri https://www.7-zip.org/download.html -usebasicparsing
     (new-Object system.net.webclient).downloadfile("https://www.7-zip.org/$($($url.links | where-object outerhtml -match "Download")[1].href)","c:\parsectemp\apps\7zip.exe")
-    start-process c:\parsectemp\apps\7zip.exe -argumentList '/s /d="c:\program files\7-zip"' -wait
+    start-process c:\parsectemp\apps\7zip.exe -argumentList '/S /D="c:\program files\7-zip"' -wait
 }
 
 #install-graphics-driver
