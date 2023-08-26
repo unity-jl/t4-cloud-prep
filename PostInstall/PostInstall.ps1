@@ -23,7 +23,8 @@ function setup-environment{
 
 #download-T4-GRID-driver
 function download-resources{
-    progresswriter -status "Downloading GRID Driver" -percentcomplete $percentcomplete
+    progresswriter -status "Downloading software and GRID Driver" -percentcomplete $percentcomplete
+    (New-Object System.Net.WebClient).DownloadFile("https://builds.parsecgaming.com/package/parsec-windows.exe", "C:\ParsecTemp\Apps\parsec-windows.exe")
 
     #FIX THIS. PARSE PAGE LINKS INSTEAD.
 
@@ -162,7 +163,7 @@ function installparsec{
 #Apps that require human intervention
 function install-parsec{
     progresswriter -status "Installing parsec" -percentcomplete $percentcomplete
-    $userdata = invoke-restmethod -headers @{"metadata"="true"} -method GET -uri "http://169.254.169.254/metadata/instance/compute/userdata?api-version=2021-01-01&format=text"
+    $userdata = invoke-restmethod -headers @{"Metadata"="true"} -method GET -uri "http://169.254.169.254/metadata/instance/compute/userData?api-version=2021-01-01&format=text"
     $decoded = [system.text.encoding]::utf8.getstring([convert]::frombase64string($userdata)) | convertfrom-json
     $arglist = "/silent /shared /vdd"
     $userassigned = $false
