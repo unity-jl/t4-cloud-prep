@@ -106,7 +106,7 @@ function clean-up {
     progresswriter -status "Deleting temporary files from c:\parsectemp" -percentcomplete $percentcomplete
     remove-item -path c:\parsectemp\drivers -force -recurse
     remove-item -path c:\parsectemp -force -recurse
-    remove-item -path c:\cloud_prep -force -recurse
+    #remove-item -path c:\cloud_prep -force -recurse
  }
 
 $scripttasklist = @(
