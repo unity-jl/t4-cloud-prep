@@ -15,8 +15,6 @@ function logger($event){
 #Creating Folders and moving script files into System directories
 function setup-environment{
     progressWriter -status "Moving files and folders into place" -percentcomplete $percentcomplete
-    #New-Item -Path $env:ProgramData\ParsecLoader -ItemType directory | Out-Null
-    #Move-Item -Path $path\ParsecTemp\PreInstall\TeamMachineSetup.ps1 -Destination $env:ProgramData\ParsecLoader}
     new-item -path c:\parsectemp\apps -itemtype directory | out-null
     new-item -path c:\parsectemp\drivers -itemtype directory | out-null
 }
@@ -71,96 +69,7 @@ function install-graphics-driver {
     cmd.exe /c "c:\parsectemp\drivers\grid_driver\setup.exe /s"
 }
 
-<#
-#Sets all applications to force close on shutdown
-function force-close-apps {
-    ProgressWriter -Status "Setting Windows not to stop shutdown if there are unsaved apps" -PercentComplete $PercentComplete
-    if (((Get-Item -Path "HKCU:\Control Panel\Desktop").GetValue("AutoEndTasks") -ne $null) -eq $true) {
-        Set-ItemProperty -path "HKCU:\Control Panel\Desktop" -Name "AutoEndTasks" -Value "1"
-        }
-    Else {
-        New-ItemProperty -path "HKCU:\Control Panel\Desktop" -Name "AutoEndTasks" -Value "1"
-        }
-    }
-
-#disable logout start menu
-function disable-logout {
-    ProgressWriter -Status "Disabling log out button on start menu" -PercentComplete $PercentComplete
-    if((Test-RegistryValue -Path HKLM:\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer -Value StartMenuLogOff )-eq $true) {Set-ItemProperty -Path HKLM:\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer -Name StartMenuLogOff -Value 1 | Out-Null} Else {New-ItemProperty -Path HKLM:\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer -Name StartMenuLogOff -Value 1 | Out-Null}
-    }
-
-#disable lock start menu
-function disable-lock {
-    ProgressWriter -Status "Disabling option to lock your Windows user profile" -PercentComplete $PercentComplete
-    if((Test-Path -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System) -eq $true) {} Else {New-Item -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies -Name Software | Out-Null}
-    if((Test-RegistryValue -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System -Value DisableLockWorkstation) -eq $true) {Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System -Name DisableLockWorkstation -Value 1 | Out-Null } Else {New-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System -Name DisableLockWorkstation -Value 1 | Out-Null}
-    }
-
-#set update policy
-function set-update-policy {
-    ProgressWriter -Status "Disabling Windows Update" -PercentComplete $PercentComplete
-    if((Test-RegistryValue -path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' -value 'DoNotConnectToWindowsUpdateInternetLocations') -eq $true) {Set-itemproperty -path HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate -Name "DoNotConnectToWindowsUpdateInternetLocations" -Value "1" | Out-Null} else {new-itemproperty -path HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate -Name "DoNotConnectToWindowsUpdateInternetLocations" -Value "1" | Out-Null}
-    if((Test-RegistryValue -path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' -value 'UpdateServiceURLAlternative') -eq $true) {Set-itemproperty -path HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate -Name "UpdateServiceURLAlternative" -Value "http://intentionally.disabled" | Out-Null} else {new-itemproperty -path HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate -Name "UpdateServiceURLAlternative" -Value "http://intentionally.disabled" | Out-Null}
-    if((Test-RegistryValue -path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' -value 'WUServer') -eq $true) {Set-itemproperty -path HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate -Name "WUServer" -Value "http://intentionally.disabled" | Out-Null} else {new-itemproperty -path HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate -Name "WUServer" -Value "http://intentionally.disabled" | Out-Null}
-    if((Test-RegistryValue -path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' -value 'WUSatusServer') -eq $true) {Set-itemproperty -path HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate -Name "WUSatusServer" -Value "http://intentionally.disabled" | Out-Null} else {new-itemproperty -path HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate -Name "WUSatusServer" -Value "http://intentionally.disabled" | Out-Null}
-    Set-ItemProperty -Path HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU -Name "AUOptions" -Value 1 | Out-Null
-    if((Test-RegistryValue -path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU' -value 'UseWUServer') -eq $true) {Set-itemproperty -path HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU -Name "UseWUServer" -Value 1 | Out-Null} else {new-ItemProperty -Path HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU -Name "UseWUServer" -Value 1 | Out-Null}
-}
-
- #Audio Driver Install
-function AudioInstall {
-    (New-Object System.Net.WebClient).DownloadFile("https://download.vb-audio.com/Download_CABLE/VBCABLE_Driver_Pack43.zip", "C:\ParsecTemp\Apps\VBCable.zip")
-    New-Item -Path "C:\ParsecTemp\Apps\VBCable" -ItemType Directory| Out-Null
-    Expand-Archive -Path "C:\ParsecTemp\Apps\VBCable.zip" -DestinationPath "C:\ParsecTemp\Apps\VBCable"
-    $pathToCatFile = "C:\ParsecTemp\Apps\VBCable\vbaudio_cable64_win7.cat"
-    $FullCertificateExportPath = "C:\ParsecTemp\Apps\VBCable\VBCert.cer"
-    $VB = @{}
-    $VB.DriverFile = $pathToCatFile;
-    $VB.CertName = $FullCertificateExportPath;
-    $VB.ExportType = [System.Security.Cryptography.X509Certificates.X509ContentType]::Cert;
-    $VB.Cert = (Get-AuthenticodeSignature -filepath $VB.DriverFile).SignerCertificate;
-    [System.IO.File]::WriteAllBytes($VB.CertName, $VB.Cert.Export($VB.ExportType))
-    Import-Certificate -CertStoreLocation Cert:\LocalMachine\TrustedPublisher -FilePath $VB.CertName | Out-Null
-    Start-Process -FilePath "C:\ParsecTemp\Apps\VBCable\VBCABLE_Setup_x64.exe" -ArgumentList '-i','-h'
-    Set-Service -Name audiosrv -StartupType Automatic
-    Start-Service -Name audiosrv
-    }
-#>
-
-<#
-function register-parsec-provisioning-task{
-    start-process powershell -verb runas -argumentlist @'
-    $action = new-scheduledtaskaction -execute 'c:\windows\system32\windowspowershell\v1.0\powershell.exe' -argument '-file c:\cloud_prep\t4-cloud-prep-main\preinstall\teammachinesetup.ps1'
-    $trigger =  new-scheduledtasktrigger -atstartup
-    $principal = new-scheduledtaskprincipal -userid "SYSTEM" -logontype serviceaccount -runlevel highest
-    $settings = new-scheduledtasksettingsset -executiontimelimit (new-timespan -hours 1)
-    register-scheduledtask -taskname provision_team_machine -action $action -trigger $trigger -principal $principal -settings $settings
-'@ 
-}
-#>
-
-<#
-function installparsec{
-    $userdata = invoke-restmethod -headers @{"metadata"="true"} -method get -uri "http://169.254.169.254/metadata/instance/compute/userdata?api-version=2021-01-01&format=text"
-    $decoded = [system.text.encoding]::utf8.getstring([convert]::frombase64string($userdata)) | convertfrom-json
-    $arglist = "/silent /shared /vdd"
-    $userassigned = $false
-    foreach($setting in $decoded.data){
-        if($setting.value){
-            if($setting.setting -eq "user_email"){
-                $userassigned = $true
-            }
-            elseif($setting.setting -eq "team_group_id" -and $userassigned -eq $true){
-                continue
-            }
-            $arglist += (" /{0}={1}" -f $setting.setting, $setting.value)
-        }
-    }     
-    start-process "c:\parsectemp\apps\parsec-windows.exe" -argumentlist $arglist -wait
-}
-#>
-
-#Apps that require human intervention
+#install parsec
 function install-parsec{
     progresswriter -status "Installing parsec" -percentcomplete $percentcomplete
     $userdata = invoke-restmethod -headers @{"Metadata"="true"} -method GET -uri "http://169.254.169.254/metadata/instance/compute/userData?api-version=2021-01-01&format=text"
@@ -196,7 +105,8 @@ function disable-devices {
 function clean-up {
     progresswriter -status "Deleting temporary files from c:\parsectemp" -percentcomplete $percentcomplete
     remove-item -path c:\parsectemp\drivers -force -recurse
-    remove-item -path $path\parsectemp -force -recurse
+    remove-item -path c:\parsectemp -force -recurse
+    remove-item -path c:\cloud_prep -force -recurse
  }
 
 $scripttasklist = @(
@@ -207,7 +117,9 @@ $scripttasklist = @(
 "enable-mouse-keys";
 "remove-shutdown";
 "install-graphics-driver";
-"install-parsec"
+"install-parsec";
+"disable-devices";
+"clean-up"
 )
 
 try{
