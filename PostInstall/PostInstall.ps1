@@ -127,7 +127,7 @@ try{
         $percentcomplete =$($scripttasklist.indexof($func) / $scripttasklist.count * 100)
         & $func $percentcomplete
         }
-    restart-computer -force
+    #restart-computer -force
 }
 catch{
     logger -event $_
