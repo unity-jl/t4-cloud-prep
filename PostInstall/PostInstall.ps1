@@ -118,7 +118,7 @@ $scripttasklist = @(
 "remove-shutdown";
 "install-graphics-driver";
 "install-parsec";
-"disable-devices";
+#"disable-devices";
 "clean-up"
 )
 
