@@ -24,9 +24,9 @@ function download-resources{
     progresswriter -status "Downloading software and GRID Driver" -percentcomplete $percentcomplete
     (New-Object System.Net.WebClient).DownloadFile("https://builds.parsecgaming.com/package/parsec-windows.exe", "C:\ParsecTemp\Apps\parsec-windows.exe")
 
-    #FIX THIS. PARSE PAGE LINKS INSTEAD.
-
-    (new-object System.Net.WebClient).downloadfile("https://download.microsoft.com/download/2/5/a/25ad21ca-ed89-41b4-935f-73023ef6c5af/528.89_grid_win10_win11_server2019_server2022_dch_64bit_international_Azure_swl.exe", "c:\parsectemp\drivers\GRID_driver.exe")
+    # Replaced Azure Driver with the official AWS EC2 Windows NVIDIA GRID Driver (G4dn instances)
+    $awsDriverUrl = "https://ec2-windows-nvidia-drivers.s3.amazonaws.com/latest/538.15_grid_win10_win11_server2019_server2022_dch_64bit_international.exe"
+    (new-object System.Net.WebClient).downloadfile($awsDriverUrl, "c:\parsectemp\drivers\GRID_driver.exe")
 }
 
 #set automatic time and timezone
@@ -72,8 +72,19 @@ function install-graphics-driver {
 #install parsec
 function install-parsec{
     progresswriter -status "Installing parsec" -percentcomplete $percentcomplete
-    $userdata = invoke-restmethod -headers @{"Metadata"="true"} -method GET -uri "http://169.254.169.254/metadata/instance/compute/userData?api-version=2021-01-01&format=text"
-    $decoded = [system.text.encoding]::utf8.getstring([convert]::frombase64string($userdata)) | convertfrom-json
+    
+    # Retrieve User Data using AWS IMDSv2
+    $token = Invoke-RestMethod -Headers @{"X-aws-ec2-metadata-token-ttl-seconds" = "21600"} -Method PUT -Uri "http://169.254.169.254/latest/api/token"
+    $rawUserData = Invoke-RestMethod -Headers @{"X-aws-ec2-metadata-token" = $token} -Method GET -Uri "http://169.254.169.254/latest/user-data"
+    
+    # Extract the JSON payload using Regex (since the AWS user data also contains the PowerShell wrapper)
+    $jsonString = [regex]::Match($rawUserData, '(?s)\{\s*"data".*?\]\s*\}').Value
+    if ([string]::IsNullOrWhiteSpace($jsonString)) {
+        $jsonString = $rawUserData # Fallback in case user data is purely JSON
+    }
+    
+    $decoded = $jsonString | convertfrom-json
+    
     $arglist = "/silent /shared /vdd"
     $userassigned = $false
     foreach($setting in $decoded.data){
@@ -86,7 +97,7 @@ function install-parsec{
             }
             $arglist += (" /{0}={1}" -f $setting.setting, $setting.value)
         }
-    }     
+    }      
     start-process "c:\parsectemp\apps\parsec-windows.exe" -argumentlist $arglist -wait
     start-process -filepath "c:\program files\parsec\parsecd.exe"
     start-sleep -s 1
@@ -104,31 +115,4 @@ function disable-devices {
 #Cleanup
 function clean-up {
     progresswriter -status "Deleting temporary files from c:\parsectemp" -percentcomplete $percentcomplete
-    remove-item -path c:\parsectemp\drivers -force -recurse
-    remove-item -path c:\parsectemp -force -recurse
-    #remove-item -path c:\cloud_prep -force -recurse
- }
-
-$scripttasklist = @(
-"setup-environment";
-"download-resources";
-"set-time";
-"enhance-pointer-precision";
-"enable-mouse-keys";
-"remove-shutdown";
-"install-graphics-driver";
-"install-parsec";
-#"disable-devices";
-"clean-up"
-)
-
-try{
-    foreach ($func in $scripttasklist) {
-        $percentcomplete =$($scripttasklist.indexof($func) / $scripttasklist.count * 100)
-        & $func $percentcomplete
-        }
-    restart-computer -force
-}
-catch{
-    logger -event $_
-}
+    remove-item -path c
