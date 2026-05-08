@@ -115,5 +115,32 @@ function disable-devices {
 #Cleanup
 function clean-up {
     progresswriter -status "Deleting temporary files from c:\parsectemp" -percentcomplete $percentcomplete
-    remove-item -path c
+    remove-item -path c:\parsectemp\drivers -force -recurse
+    remove-item -path c:\parsectemp -force -recurse
+}
+
+# --- MISSING EXECUTION BLOCK TO ADD BELOW ---
+
+$scripttasklist = @(
+"setup-environment";
+"download-resources";
+"set-time";
+"enhance-pointer-precision";
+"enable-mouse-keys";
+"remove-shutdown";
+"install-graphics-driver";
+"install-parsec";
+"clean-up"
+)
+
+try{
+    foreach ($func in $scripttasklist) {
+        $percentcomplete =$($scripttasklist.indexof($func) / $scripttasklist.count * 100)
+        & $func $percentcomplete
+    }
+    # Restart to apply the NVIDIA Grid Driver
+    restart-computer -force
+}
+catch{
+    logger -event $_
 }
