@@ -18,31 +18,31 @@ function setup-environment{
     new-item -path c:\parsectemp\apps -itemtype directory | out-null
     new-item -path c:\parsectemp\drivers -itemtype directory | out-null
 }
+
 #download-T4-GRID-driver
 function download-resources{
     progresswriter -status "Downloading software and GRID Driver" -percentcomplete $percentcomplete
     
-    # Download Parsec
-    Invoke-WebRequest -Uri "https://builds.parsec.app/package/parsec-windows.exe" -OutFile "C:\ParsecTemp\Apps\parsec-windows.exe" -UseBasicParsing
+    # Use fast .NET WebClient for the Parsec download
+    (New-Object System.Net.WebClient).DownloadFile("https://builds.parsec.app/package/parsec-windows.exe", "C:\ParsecTemp\Apps\parsec-windows.exe")
 
-    # Dynamically find and download the latest AWS NVIDIA Grid Driver via S3 REST API
+    # Dynamically find the latest AWS NVIDIA Grid Driver
     progresswriter -status "Fetching latest AWS NVIDIA GRID Driver" -percentcomplete $percentcomplete
     
     $s3Url = "https://ec2-windows-nvidia-drivers.s3.amazonaws.com"
     $rawXml = (Invoke-WebRequest -Uri "$s3Url/?prefix=latest/" -UseBasicParsing).Content
     
-    # BULLETPROOF REGEX: Ignores the name and grabs ANY .exe file in the latest/ folder
+    # Grab the newest .exe
     $driverKey = [regex]::Match($rawXml, '<Key>(latest/[^<]+\.exe)</Key>').Groups[1].Value
     
-    # Failsafe
     if ([string]::IsNullOrWhiteSpace($driverKey)) {
         throw "Failed to find any .exe file inside the AWS bucket XML!"
     }
 
     $driverUrl = "$s3Url/$driverKey"
     
-    # Download the exact driver
-    Invoke-WebRequest -Uri $driverUrl -OutFile "c:\parsectemp\drivers\GRID_driver.exe" -UseBasicParsing
+    # Use fast .NET WebClient for the massive 500MB driver download
+    (New-Object System.Net.WebClient).DownloadFile($driverUrl, "c:\parsectemp\drivers\GRID_driver.exe")
 }
 
 #set automatic time and timezone
