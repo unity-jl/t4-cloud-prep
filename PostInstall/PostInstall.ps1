@@ -116,3 +116,4 @@ function disable-devices {
 function clean-up {
     progresswriter -status "Deleting temporary files from c:\parsectemp" -percentcomplete $percentcomplete
     remove-item -path c
+}
