@@ -22,11 +22,17 @@ function setup-environment{
 #download-T4-GRID-driver
 function download-resources{
     progresswriter -status "Downloading software and GRID Driver" -percentcomplete $percentcomplete
+    
+    # Download Parsec
     (New-Object System.Net.WebClient).DownloadFile("https://builds.parsecgaming.com/package/parsec-windows.exe", "C:\ParsecTemp\Apps\parsec-windows.exe")
 
-    # Replaced Azure Driver with the official AWS EC2 Windows NVIDIA GRID Driver (G4dn instances)
-    $awsDriverUrl = "https://ec2-windows-nvidia-drivers.s3.amazonaws.com/latest/538.15_grid_win10_win11_server2019_server2022_dch_64bit_international.exe"
-    (new-object System.Net.WebClient).downloadfile($awsDriverUrl, "c:\parsectemp\drivers\GRID_driver.exe")
+    # Dynamically download the latest AWS NVIDIA Grid Driver using the AWS CLI
+    progresswriter -status "Fetching latest AWS NVIDIA GRID Driver" -percentcomplete $percentcomplete
+    aws s3 cp s3://ec2-windows-nvidia-drivers/latest/ c:\parsectemp\drivers\ --recursive --no-sign-request --exclude "*" --include "*grid_win10_win11_server2019_server2022_dch_64bit_international.exe"
+    
+    # Rename the downloaded driver so the extraction function knows exactly what to look for
+    $downloadedDriver = Get-ChildItem -Path "c:\parsectemp\drivers\*grid*international.exe"
+    Rename-Item -Path $downloadedDriver.FullName -NewName "GRID_driver.exe"
 }
 
 #set automatic time and timezone
