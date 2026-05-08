@@ -32,8 +32,14 @@ function download-resources{
     $s3Url = "https://ec2-windows-nvidia-drivers.s3.amazonaws.com"
     $rawXml = (Invoke-WebRequest -Uri "$s3Url/?prefix=latest/" -UseBasicParsing).Content
     
-    # Use Regex to extract the exact filename of the newest driver from the AWS bucket XML
-    $driverKey = [regex]::Match($rawXml, 'latest/[^<]+grid_win10_win11_server2019_server2022_dch_64bit_international\.exe').Value
+    # UPDATED REGEX: Catches the new "_aws_swl" tag or anything else AWS appends before the .exe
+    $driverKey = [regex]::Match($rawXml, 'latest/[^<]+grid_win10_win11_server2019_server2022_dch_64bit[^<]*\.exe').Value
+    
+    # Failsafe just in case AWS drastically changes their naming convention again
+    if ([string]::IsNullOrWhiteSpace($driverKey)) {
+        throw "Failed to find the NVIDIA driver in the AWS bucket! The regex matched nothing."
+    }
+
     $driverUrl = "$s3Url/$driverKey"
     
     # Download the exact driver
