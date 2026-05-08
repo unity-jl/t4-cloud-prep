@@ -23,14 +23,14 @@ function setup-environment{
 function download-resources{
     progresswriter -status "Downloading software and GRID Driver" -percentcomplete $percentcomplete
     
-    # Download Parsec
-    (New-Object System.Net.WebClient).DownloadFile("https://builds.parsecgaming.com/package/parsec-windows.exe", "C:\ParsecTemp\Apps\parsec-windows.exe")
+    # FIXED: Parsec retired the old domain. Pointing to the new parsec.app URL.
+    Invoke-WebRequest -Uri "https://builds.parsec.app/package/parsec-windows.exe" -OutFile "C:\ParsecTemp\Apps\parsec-windows.exe" -UseBasicParsing
 
     # Dynamically download the latest AWS NVIDIA Grid Driver using the AWS CLI
     progresswriter -status "Fetching latest AWS NVIDIA GRID Driver" -percentcomplete $percentcomplete
     aws s3 cp s3://ec2-windows-nvidia-drivers/latest/ c:\parsectemp\drivers\ --recursive --no-sign-request --exclude "*" --include "*grid_win10_win11_server2019_server2022_dch_64bit_international.exe"
     
-    # Rename the downloaded driver so the extraction function knows exactly what to look for
+    # Rename the downloaded driver so the extraction script finds it
     $downloadedDriver = Get-ChildItem -Path "c:\parsectemp\drivers\*grid*international.exe"
     Rename-Item -Path $downloadedDriver.FullName -NewName "GRID_driver.exe"
 }
@@ -62,9 +62,18 @@ function remove-shutdown {
 
 #7Zip is required to extract the GRID_Driver.exe file/driver files
 function install7zip {
-    $url = invoke-webrequest -uri https://www.7-zip.org/download.html -usebasicparsing
-    (new-Object system.net.webclient).downloadfile("https://www.7-zip.org/$($($url.links | where-object outerhtml -match "Download")[1].href)","c:\parsectemp\apps\7zip.exe")
-    start-process c:\parsectemp\apps\7zip.exe -argumentList '/S /D="c:\program files\7-zip"' -wait
+    progresswriter -status "Installing 7Zip" -percentcomplete $percentComplete
+    
+    # FIXED: Safely parsing the 7-Zip website for the 64-bit installer
+    $url = Invoke-WebRequest -Uri "https://www.7-zip.org/download.html" -UseBasicParsing
+    $href = ($url.Links | Where-Object { $_.href -match "x64\.exe" })[0].href
+    
+    # Account for absolute vs relative HTML links
+    if ($href -match "^http") { $downloadUrl = $href }
+    else { $downloadUrl = "https://www.7-zip.org/$href" }
+
+    Invoke-WebRequest -Uri $downloadUrl -OutFile "c:\parsectemp\apps\7zip.exe" -UseBasicParsing
+    Start-Process "c:\parsectemp\apps\7zip.exe" -ArgumentList '/S /D="c:\program files\7-zip"' -Wait
 }
 
 #install-graphics-driver
