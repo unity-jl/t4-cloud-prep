@@ -23,16 +23,21 @@ function setup-environment{
 function download-resources{
     progresswriter -status "Downloading software and GRID Driver" -percentcomplete $percentcomplete
     
-    # FIXED: Parsec retired the old domain. Pointing to the new parsec.app URL.
+    # Download Parsec
     Invoke-WebRequest -Uri "https://builds.parsec.app/package/parsec-windows.exe" -OutFile "C:\ParsecTemp\Apps\parsec-windows.exe" -UseBasicParsing
 
-    # Dynamically download the latest AWS NVIDIA Grid Driver using the AWS CLI
+    # Dynamically find and download the latest AWS NVIDIA Grid Driver via S3 REST API
     progresswriter -status "Fetching latest AWS NVIDIA GRID Driver" -percentcomplete $percentcomplete
-    aws s3 cp s3://ec2-windows-nvidia-drivers/latest/ c:\parsectemp\drivers\ --recursive --no-sign-request --exclude "*" --include "*grid_win10_win11_server2019_server2022_dch_64bit_international.exe"
     
-    # Rename the downloaded driver so the extraction script finds it
-    $downloadedDriver = Get-ChildItem -Path "c:\parsectemp\drivers\*grid*international.exe"
-    Rename-Item -Path $downloadedDriver.FullName -NewName "GRID_driver.exe"
+    $s3Url = "https://ec2-windows-nvidia-drivers.s3.amazonaws.com"
+    $rawXml = (Invoke-WebRequest -Uri "$s3Url/?prefix=latest/" -UseBasicParsing).Content
+    
+    # Use Regex to extract the exact filename of the newest driver from the AWS bucket XML
+    $driverKey = [regex]::Match($rawXml, 'latest/[^<]+grid_win10_win11_server2019_server2022_dch_64bit_international\.exe').Value
+    $driverUrl = "$s3Url/$driverKey"
+    
+    # Download the exact driver
+    Invoke-WebRequest -Uri $driverUrl -OutFile "c:\parsectemp\drivers\GRID_driver.exe" -UseBasicParsing
 }
 
 #set automatic time and timezone
