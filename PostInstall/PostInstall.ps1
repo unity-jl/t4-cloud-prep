@@ -18,7 +18,6 @@ function setup-environment{
     new-item -path c:\parsectemp\apps -itemtype directory | out-null
     new-item -path c:\parsectemp\drivers -itemtype directory | out-null
 }
-
 #download-T4-GRID-driver
 function download-resources{
     progresswriter -status "Downloading software and GRID Driver" -percentcomplete $percentcomplete
@@ -32,12 +31,12 @@ function download-resources{
     $s3Url = "https://ec2-windows-nvidia-drivers.s3.amazonaws.com"
     $rawXml = (Invoke-WebRequest -Uri "$s3Url/?prefix=latest/" -UseBasicParsing).Content
     
-    # UPDATED REGEX: Catches the new "_aws_swl" tag or anything else AWS appends before the .exe
-    $driverKey = [regex]::Match($rawXml, 'latest/[^<]+grid_win10_win11_server2019_server2022_dch_64bit[^<]*\.exe').Value
+    # BULLETPROOF REGEX: Ignores the name and grabs ANY .exe file in the latest/ folder
+    $driverKey = [regex]::Match($rawXml, '<Key>(latest/[^<]+\.exe)</Key>').Groups[1].Value
     
-    # Failsafe just in case AWS drastically changes their naming convention again
+    # Failsafe
     if ([string]::IsNullOrWhiteSpace($driverKey)) {
-        throw "Failed to find the NVIDIA driver in the AWS bucket! The regex matched nothing."
+        throw "Failed to find any .exe file inside the AWS bucket XML!"
     }
 
     $driverUrl = "$s3Url/$driverKey"
